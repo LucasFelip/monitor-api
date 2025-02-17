@@ -1,0 +1,132 @@
+version: '3.8'
+services:
+  postgres:
+    image: postgres:latest
+    container_name: postgres
+    env_file:
+      - .env
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      SPRING_DATASOURCE_URL: ${SPRING_DATASOURCE_URL}
+      SPRING_DATASOURCE_USERNAME: ${SPRING_DATASOURCE_USERNAME}
+      SPRING_DATASOURCE_PASSWORD: ${SPRING_DATASOURCE_PASSWORD}
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  mongodb:
+    image: mongo:latest
+    container_name: mongodb
+    env_file:
+      - .env
+    environment:
+      MONGO_INITDB_DATABASE: ${MONGO_INITDB_DATABASE}
+      SPRING_DATA_MONGODB_URI: ${SPRING_DATA_MONGODB_URI}
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodata:/data/db
+    healthcheck:
+      test: ["CMD", "pgrep", "mongod"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  zookeeper:
+    image: bitnami/zookeeper:latest
+    container_name: zookeeper
+    environment:
+      - ALLOW_ANONYMOUS_LOGIN=yes
+    ports:
+      - "2181:2181"
+    healthcheck:
+      test: ["CMD", "echo", "ruok", "|", "nc", "localhost", "2181"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  kafka:
+    image: wurstmeister/kafka
+    container_name: kafka
+    env_file:
+      - .env
+    environment:
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
+      KAFKA_BROKER_ID: 1
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: ${SPRING_KAFKA_BOOTSTRAP_SERVERS}
+      SPRING_KAFKA_CONSUMER_GROUP: ${SPRING_KAFKA_CONSUMER_GROUP}
+      SPRING_KAFKA_AUTO_OFFSET_RESET: ${SPRING_KAFKA_AUTO_OFFSET_RESET}
+    ports:
+      - "9092:9092"
+    depends_on:
+      - zookeeper
+    healthcheck:
+      test: ["CMD", "nc", "-z", "kafka", "9092"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  monitor-api:
+    build: .
+    container_name: monitor-api
+    env_file:
+      - .env
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      mongodb:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      zookeeper:
+        condition: service_healthy
+    environment:
+      APP_PROFILE: dev
+      SPRING_DATASOURCE_URL: ${SPRING_DATASOURCE_URL}
+      SPRING_DATASOURCE_USERNAME: ${SPRING_DATASOURCE_USERNAME}
+      SPRING_DATASOURCE_PASSWORD: ${SPRING_DATASOURCE_PASSWORD}
+      SPRING_JPA_SHOW_SQL: ${SPRING_JPA_SHOW_SQL}
+      SPRING_DATA_MONGODB_URI: ${SPRING_DATA_MONGODB_URI}
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: ${SPRING_KAFKA_BOOTSTRAP_SERVERS}
+      SPRING_KAFKA_CONSUMER_GROUP: ${SPRING_KAFKA_CONSUMER_GROUP}
+      SPRING_KAFKA_AUTO_OFFSET_RESET: ${SPRING_KAFKA_AUTO_OFFSET_RESET}
+      JWT_JWK_SET_URI: ${JWT_JWK_SET_URI}
+      SPRING_MAIL_HOST: ${SPRING_MAIL_HOST}
+      SPRING_MAIL_PORT: ${SPRING_MAIL_PORT}
+      SPRING_MAIL_USERNAME: ${SPRING_MAIL_USERNAME}
+      SPRING_MAIL_PASSWORD: ${SPRING_MAIL_PASSWORD}
+      SPRING_MAIL_SMTP_AUTH: ${SPRING_MAIL_SMTP_AUTH}
+      SPRING_MAIL_SMTP_STARTTLS_ENABLE: ${SPRING_MAIL_SMTP_STARTTLS_ENABLE}
+      SPRING_MAIL_CONNECTIONTIMEOUT: ${SPRING_MAIL_CONNECTIONTIMEOUT}
+      SPRING_MAIL_TIMEOUT: ${SPRING_MAIL_TIMEOUT}
+      SPRING_MAIL_WRITETIMEOUT: ${SPRING_MAIL_WRITETIMEOUT}
+      MAIL_ALERT_TO: ${MAIL_ALERT_TO}
+      SELF_MONITOR_INTERVAL: ${SELF_MONITOR_INTERVAL}
+      ANOMALY_CPU_CRITICAL_THRESHOLD: ${ANOMALY_CPU_CRITICAL_THRESHOLD}
+      ANOMALY_RESPONSE_TIME_CRITICAL_THRESHOLD: ${ANOMALY_RESPONSE_TIME_CRITICAL_THRESHOLD}
+      ANOMALY_MEMORY_CRITICAL_THRESHOLD: ${ANOMALY_MEMORY_CRITICAL_THRESHOLD}
+      ANOMALY_CPU_MODERATE_THRESHOLD: ${ANOMALY_CPU_MODERATE_THRESHOLD}
+      ANOMALY_RESPONSE_TIME_MODERATE_THRESHOLD: ${ANOMALY_RESPONSE_TIME_MODERATE_THRESHOLD}
+      ANOMALY_MEMORY_MODERATE_THRESHOLD: ${ANOMALY_MEMORY_MODERATE_THRESHOLD}
+      LOGGING_LEVEL_KAFKA_ADMIN: ${LOGGING_LEVEL_KAFKA_ADMIN}
+      LOGGING_LEVEL_KAFKA: ${LOGGING_LEVEL_KAFKA}
+      LOGGING_LEVEL_AMQP: ${LOGGING_LEVEL_AMQP}
+      LOGGING_LEVEL_MONGODB: ${LOGGING_LEVEL_MONGODB}
+      LOGGING_LEVEL_MONGO_TEMPLATE: ${LOGGING_LEVEL_MONGO_TEMPLATE}
+      LOGGING_LEVEL_ACTUATE_HEALTH: ${LOGGING_LEVEL_ACTUATE_HEALTH}
+
+volumes:
+  pgdata:
+  mongodata:
