@@ -26,9 +26,19 @@ public class EmailAlertService {
         sendEmail(alertRecipient, "CRÍTICO: " + subject, formattedBody);
     }
 
+    public void sendCriticalAlert(String email, String subject, String body) {
+        String formattedBody = formatLogMessage(body);
+        sendEmail(email, "CRÍTICO: " + subject, formattedBody);
+    }
+
     public void sendAlert(String subject, String body) {
         String formattedBody = formatLogMessage(body);
         sendEmail(alertRecipient, subject, formattedBody);
+    }
+
+    public void sendAlert(String email, String subject, String body) {
+        String formattedBody = formatLogMessage(body);
+        sendEmail(email, subject, formattedBody);
     }
 
     private void sendEmail(String to, String subject, String body) {

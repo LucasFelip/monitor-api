@@ -11,13 +11,17 @@ public class KafkaConfig {
     private String groupId;
 
     @Bean
-    public NewTopic monitorTopic() {
-        return new NewTopic("monitor-system-topic", 1, (short) 1);
-    }
-
-    @Bean
     public NewTopic alertTopic() {
         return new NewTopic("alert-topic", 1, (short) 1);
     }
 
+    @Bean
+    public NewTopic performanceTopic() {
+        return new NewTopic("performance-topic", 1, (short) 1);
+    }
+
+    @Bean
+    public NewTopic alertPerformanceTopic() {
+        return new NewTopic("alert-performance-topic", 1, (short) 1);
+    }
 }

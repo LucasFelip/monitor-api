@@ -55,13 +55,11 @@ public class SelfMonitoringScheduler {
             }
             long responseTime = System.currentTimeMillis() - startTime;
 
-            // Coleta de métricas do sistema
             OperatingSystemMXBean osBean = (OperatingSystemMXBean) ManagementFactory.getOperatingSystemMXBean();
             double cpuUsage = osBean.getSystemCpuLoad() * 100;
             double memoryUsage = (osBean.getTotalPhysicalMemorySize() - osBean.getFreePhysicalMemorySize())
                     / (1024.0 * 1024.0);
 
-            // Define os valores do status de forma consistente
             String level;
             String details;
             if (healthy) {
@@ -75,7 +73,6 @@ public class SelfMonitoringScheduler {
                 }
             }
 
-            // Cria o LogDTO
             LogDTO logDTO = LogDTO.builder()
                     .component("SelfMonitor")
                     .operation("HealthCheck")
@@ -87,24 +84,18 @@ public class SelfMonitoringScheduler {
                     .details(details)
                     .build();
 
-            // Analisa anomalias (que também considera o uso de memória)
             AnomalyDetectionService.AnomalyAlertResult alertResult = anomalyDetectionService.analyze(logDTO);
 
-            // Se houver anomalia, atualiza os campos do logDTO para refletir os resultados da análise
             if (!"NONE".equalsIgnoreCase(alertResult.getLevel())) {
                 logDTO.setLevel(alertResult.getLevel());
                 logDTO.setDetails(logDTO.getDetails() + "\n" + alertResult.getMessage());
             }
 
-            // Persiste o log e envia mensagem com os mesmos dados (para evitar divergência)
             Log logEntity = LogConverterUtil.convertToEntity(logDTO);
             logService.saveLog(logEntity);
 
-            String jsonMessage = LogConverterUtil.convertToJson(logDTO);
-            kafkaProducer.sendMessage("monitor-system-topic", jsonMessage);
-
-            // Se houver anomalia, publica o evento de alerta (com os dados consistentes)
             if (!"NONE".equalsIgnoreCase(alertResult.getLevel())) {
+                String jsonMessage = LogConverterUtil.convertToJson(logDTO);
                 kafkaProducer.sendMessage("alert-topic", jsonMessage);
             }
 

@@ -49,7 +49,6 @@ public class LogController {
         } else if (start != null && end != null) {
             logs = logService.getLogsByDateRange(start, end);
         } else {
-            // Caso nenhum filtro seja passado, retorna logs do último dia como exemplo.
             logs = logService.getLogsByDateRange(LocalDateTime.now().minusDays(1), LocalDateTime.now());
         }
 

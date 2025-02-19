@@ -29,4 +29,17 @@ public class LogConverterUtil {
             throw new RuntimeException("Erro ao converter LogDTO para JSON", e);
         }
     }
+
+    public static LogDTO convertToDto(Log entity) {
+        return LogDTO.builder()
+                .component(entity.getComponent())
+                .operation(entity.getOperation())
+                .timestamp(entity.getTimestamp())
+                .responseTime(entity.getResponseTime())
+                .cpuUsage(entity.getCpuUsage())
+                .memoryUsage(entity.getMemoryUsage())
+                .level(entity.getLevel())
+                .details(entity.getDetails())
+                .build();
+    }
 }

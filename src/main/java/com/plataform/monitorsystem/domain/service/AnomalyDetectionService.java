@@ -1,12 +1,12 @@
 package com.plataform.monitorsystem.domain.service;
 
 import com.plataform.monitorsystem.api.dto.LogDTO;
+import com.plataform.monitorsystem.api.dto.PerformanceDTO;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 @Service
 public class AnomalyDetectionService {
-
     @Value("${anomaly.cpu.critical.threshold:80.0}")
     private double cpuCriticalThreshold;
 
@@ -26,24 +26,49 @@ public class AnomalyDetectionService {
     private double memoryModerateThreshold;
 
     /**
-     * Analisa o LogDTO e retorna o resultado da verificação de anomalias.
+     * Analisa os dados do monitoramento (LogDTO ou PerformanceDTO) e retorna o resultado da verificação de anomalias.
      */
-    public AnomalyAlertResult analyze(LogDTO logDTO) {
-        // Se o health check não estiver "UP", já é considerado crítico
-        if (!"UP".equalsIgnoreCase(logDTO.getLevel())) {
-            return new AnomalyAlertResult("CRITICAL", "Falha na saúde da API: " + logDTO.getDetails());
+    public AnomalyAlertResult analyze(Object data) {
+        String level;
+        String details;
+        Double cpuUsage;
+        Long responseTime;
+        Double memoryUsage;
+
+        if (data instanceof LogDTO) {
+            LogDTO logData = (LogDTO) data;
+            level = logData.getLevel();
+            details = logData.getDetails();
+            cpuUsage = logData.getCpuUsage();
+            responseTime = logData.getResponseTime();
+            memoryUsage = logData.getMemoryUsage();
+        } else if (data instanceof PerformanceDTO) {
+            PerformanceDTO perfData = (PerformanceDTO) data;
+            level = perfData.getLevel();
+            details = perfData.getDetails();
+            cpuUsage = perfData.getCpuUsage();
+            responseTime = perfData.getResponseTime();
+            memoryUsage = perfData.getMemoryUsage();
+        } else {
+            throw new IllegalArgumentException("Tipo de dado não suportado para análise de anomalias.");
         }
 
-        boolean cpuCritical = logDTO.getCpuUsage() > cpuCriticalThreshold;
-        boolean responseTimeCritical = logDTO.getResponseTime() > responseTimeCriticalThreshold;
-        boolean memoryCritical = logDTO.getMemoryUsage() > memoryCriticalThreshold;
+        if (!"UP".equalsIgnoreCase(level)) {
+            return new AnomalyAlertResult("CRITICAL", "Falha na saúde da API: " + details);
+        }
 
+        if (cpuUsage == null || responseTime == null || memoryUsage == null) {
+            return new AnomalyAlertResult("CRITICAL", "Dados ausentes: CPU, tempo de resposta ou memória não informados.");
+        }
+
+        boolean cpuCritical = cpuUsage > cpuCriticalThreshold;
+        boolean responseTimeCritical = responseTime > responseTimeCriticalThreshold;
+        boolean memoryCritical = memoryUsage > memoryCriticalThreshold;
         boolean critical = cpuCritical || responseTimeCritical || memoryCritical;
 
-        boolean cpuModerate = logDTO.getCpuUsage() > cpuModerateThreshold;
-        boolean responseTimeModerate = logDTO.getResponseTime() > responseTimeModerateThreshold;
-        boolean memoryModerate = logDTO.getMemoryUsage() > memoryModerateThreshold;
-
+        boolean cpuModerate = cpuUsage > cpuModerateThreshold;
+        boolean responseTimeModerate = responseTime > responseTimeModerateThreshold;
+        boolean memoryModerate = memoryUsage > memoryModerateThreshold;
         boolean moderate = cpuModerate || responseTimeModerate || memoryModerate;
 
         if (critical) {

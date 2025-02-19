@@ -8,7 +8,6 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    // Exemplo de tratamento para exceção genérica
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleException(Exception ex) {
         ErrorResponse errorResponse = ErrorResponse.builder()
@@ -18,9 +17,6 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
     }
 
-    // Outros tratadores podem ser adicionados para exceções específicas
-
-    // Classe auxiliar para padronizar a resposta de erro
     public static class ErrorResponse {
 
         private int status;

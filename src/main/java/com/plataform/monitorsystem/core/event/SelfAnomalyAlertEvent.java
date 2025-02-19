@@ -11,16 +11,13 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @Getter
 @Setter
-public class AnomalyAlertEvent {
+public class SelfAnomalyAlertEvent {
     private String component;
-    private String monitorUrl;
-    private  String alertEmail;
+    private String operation;
     private LocalDateTime timestamp;
     private long responseTime;
     private double cpuUsage;
     private double memoryUsage;
-    private double errorRate;
-    private String requestId;
     private String level;
     private String details;
 }

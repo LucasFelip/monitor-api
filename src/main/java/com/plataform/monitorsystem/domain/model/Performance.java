@@ -17,31 +17,39 @@ public class Performance {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // Identificador do sistema ou API que está enviando os dados de performance.
     @Column(name = "system_identifier", nullable = false)
     private String systemIdentifier;
 
-    // Pode indicar o endpoint ou a operação monitorada.
-    @Column(name = "endpoint", nullable = false)
-    private String endpoint;
+    @Column(name = "monitored_url", nullable = false)
+    private String monitoredUrl;
 
-    // Data e hora do registro.
+    @Column(name = "alert_email", nullable = false)
+    private String alertEmail;
+
     @Column(name = "timestamp", nullable = false)
     private LocalDateTime timestamp;
 
-    // Tempo de resposta em milissegundos.
     @Column(name = "response_time", nullable = false)
     private Long responseTime;
 
-    // Uso de CPU em percentual (ex.: 75.5 para 75,5%).
     @Column(name = "cpu_usage", nullable = false)
     private Double cpuUsage;
 
-    // Uso de memória (em MB ou percentual, conforme a convenção adotada).
     @Column(name = "memory_usage", nullable = false)
     private Double memoryUsage;
 
-    // Taxa de erro, representando a proporção de requisições com erro (valor entre 0 e 1).
     @Column(name = "error_rate")
     private Double errorRate;
+
+    @Column(name = "status_code")
+    private Integer statusCode;
+
+    @Column(name = "request_id", unique = true)
+    private String requestId;
+
+    @Column(name = "level")
+    private String level;
+
+    @Column(name = "details")
+    private String details;
 }

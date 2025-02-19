@@ -13,10 +13,14 @@ import java.time.LocalDateTime;
 @Builder
 public class PerformanceDTO {
     private String systemIdentifier;
-    private String endpoint;
+    private String monitoredUrl;
+    private String alertEmail;
     private LocalDateTime timestamp;
     private Long responseTime;
     private Double cpuUsage;
     private Double memoryUsage;
     private Double errorRate;
+    private String requestId;
+    private String level;
+    private String details;
 }
