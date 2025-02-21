@@ -2,6 +2,8 @@ package com.plataform.monitorsystem.domain.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.SimpleMailMessage;
@@ -11,7 +13,10 @@ import org.springframework.stereotype.Service;
 @Service
 public class EmailAlertService {
     private final JavaMailSender mailSender;
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final ObjectMapper objectMapper = new ObjectMapper()
+            .registerModule(new JavaTimeModule())
+            .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
+            .enable(SerializationFeature.WRITE_DATES_WITH_ZONE_ID);
 
     @Value("${mail.alert.to}")
     private String alertRecipient;
@@ -56,10 +61,15 @@ public class EmailAlertService {
     private String formatLogMessage(String jsonMessage) {
         try {
             JsonNode node = objectMapper.readTree(jsonMessage);
+
+            System.out.println("\n\n\n node: " + node + "\n\n\n");
             StringBuilder sb = new StringBuilder();
             sb.append("====================================\n");
-            sb.append("           ALERTA DE SISTEMA         \n");
+            sb.append("         ALERTA DE SISTEMA          \n");
             sb.append("====================================\n\n");
+
+            sb.append("Resumo do Alerta:\n");
+            sb.append("-------------------------------\n");
 
             if (node.has("component")) {
                 sb.append("Componente       : ").append(node.get("component").asText()).append("\n");
@@ -68,8 +78,7 @@ public class EmailAlertService {
                 sb.append("Operação         : ").append(node.get("operation").asText()).append("\n");
             }
             if (node.has("timestamp")) {
-                String timestamp = node.get("timestamp").asText();
-                sb.append("Data/Hora        : ").append(timestamp).append("\n");
+                sb.append("Data/Hora        : ").append(node.get("timestamp").asText()).append("\n");
             }
             if (node.has("responseTime")) {
                 sb.append("Tempo de Resposta: ").append(node.get("responseTime").asLong()).append(" ms\n");
@@ -86,7 +95,11 @@ public class EmailAlertService {
             if (node.has("details")) {
                 sb.append("Detalhes         : ").append(node.get("details").asText()).append("\n");
             }
-            sb.append("\n====================================\n");
+
+            sb.append("-------------------------------\n");
+            sb.append("Ação Recomendada : Verificar o sistema imediatamente.\n");
+            sb.append("====================================\n");
+
             return sb.toString();
         } catch (Exception e) {
             return jsonMessage;

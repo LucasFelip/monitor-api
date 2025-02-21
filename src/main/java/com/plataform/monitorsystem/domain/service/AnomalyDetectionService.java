@@ -105,4 +105,28 @@ public class AnomalyDetectionService {
             return message;
         }
     }
+
+    public double getCpuCriticalThreshold() {
+        return cpuCriticalThreshold;
+    }
+
+    public long getResponseTimeCriticalThreshold() {
+        return responseTimeCriticalThreshold;
+    }
+
+    public double getMemoryCriticalThreshold() {
+        return memoryCriticalThreshold;
+    }
+
+    public double getCpuModerateThreshold() {
+        return cpuModerateThreshold;
+    }
+
+    public long getResponseTimeModerateThreshold() {
+        return responseTimeModerateThreshold;
+    }
+
+    public double getMemoryModerateThreshold() {
+        return memoryModerateThreshold;
+    }
 }

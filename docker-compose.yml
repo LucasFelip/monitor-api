@@ -75,6 +75,30 @@ services:
       timeout: 5s
       retries: 5
 
+  spark-master:
+    image: bitnami/spark:3.5.4
+    container_name: spark-master
+    environment:
+      - SPARK_MODE=master
+      - SPARK_RPC_AUTHENTICATION_ENABLED=no
+      - SPARK_RPC_ENCRYPTION_ENABLED=no
+      - SPARK_LOCAL_STORAGE_ENCRYPTION_ENABLED=no
+    ports:
+      - "7077:7077"
+      - "8081:8081"
+
+  spark-worker:
+    image: bitnami/spark:3.5.4
+    container_name: spark-worker
+    environment:
+      - SPARK_MODE=worker
+      - SPARK_MASTER_URL=spark://spark-master:7077
+      - SPARK_WORKER_MEMORY=1G
+    depends_on:
+      - spark-master
+    ports:
+      - "7000:7000"
+
   monitor-api:
     build: .
     container_name: monitor-api
@@ -91,6 +115,8 @@ services:
         condition: service_healthy
       zookeeper:
         condition: service_healthy
+      spark-master:
+        condition: service_started
     environment:
       APP_PROFILE: dev
       SPRING_DATASOURCE_URL: ${SPRING_DATASOURCE_URL}
@@ -125,6 +151,8 @@ services:
       LOGGING_LEVEL_MONGODB: ${LOGGING_LEVEL_MONGODB}
       LOGGING_LEVEL_MONGO_TEMPLATE: ${LOGGING_LEVEL_MONGO_TEMPLATE}
       LOGGING_LEVEL_ACTUATE_HEALTH: ${LOGGING_LEVEL_ACTUATE_HEALTH}
+      SPARK_MASTER: ${SPARK_MASTER}
+      SPARK_APP_NAME: ${SPARK_APP_NAME}
 
 volumes:
   pgdata:

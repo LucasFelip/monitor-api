@@ -85,4 +85,8 @@ public class LogService {
     public List<Log> getLogsByComponentAndDateRange(String component, LocalDateTime start, LocalDateTime end) {
         return logRepository.findByComponentAndTimestampBetween(component, start, end);
     }
+
+    public List<Log> findAllLogs() {
+        return logRepository.findAll();
+    }
 }
